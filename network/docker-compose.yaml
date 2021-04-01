@@ -1,0 +1,419 @@
+version: '2'
+
+networks:
+  fabric-ca:
+
+services:
+  ca-tls:
+    container_name: ca-tls
+    image: hyperledger/fabric-ca:latest
+    command: sh -c 'fabric-ca-server start -d -b tls-ca-admin:tls-ca-adminpw --port 7052'
+    environment:
+        - FABRIC_CA_SERVER_HOME=/tmp/hyperledger/fabric-ca/crypto
+        - FABRIC_CA_SERVER_TLS_ENABLED=true
+        - FABRIC_CA_SERVER_CSR_CN=tls-ca
+        - FABRIC_CA_SERVER_CSR_HOSTS=0.0.0.0
+        - FABRIC_CA_SERVER_DEBUG=true
+    volumes:
+        - /tmp/hyperledger/tls-ca:/tmp/hyperledger/fabric-ca
+    networks:
+        - fabric-ca
+    ports:
+        - 7052:7052
+
+  rca-ayn:
+    container_name: rca-ayn
+    image: hyperledger/fabric-ca:latest
+    command: sh -c 'fabric-ca-server start -d -b rca-ayn-admin:rca-ayn-adminpw --port 7053'
+    environment:
+        - FABRIC_CA_SERVER_HOME=/tmp/hyperledger/fabric-ca/crypto
+        - FABRIC_CA_SERVER_TLS_ENABLED=true
+        - FABRIC_CA_SERVER_CSR_CN=rca-ayn
+        - FABRIC_CA_SERVER_CSR_HOSTS=0.0.0.0
+        - FABRIC_CA_SERVER_DEBUG=true
+    volumes:
+        - /tmp/hyperledger/ayn/ca:/tmp/hyperledger/fabric-ca
+    networks:
+        - fabric-ca
+    ports:
+        - 7053:7053
+
+  rca-doctor:
+    container_name: rca-doctor
+    image: hyperledger/fabric-ca:latest
+    command: sh -c 'fabric-ca-server start -d -b rca-doctor-admin:rca-doctor-adminpw --port 7054'
+    environment:
+        - FABRIC_CA_SERVER_HOME=/tmp/hyperledger/fabric-ca/crypto
+        - FABRIC_CA_SERVER_TLS_ENABLED=true
+        - FABRIC_CA_SERVER_CSR_CN=rca-doctor
+        - FABRIC_CA_SERVER_CSR_HOSTS=0.0.0.0
+        - FABRIC_CA_SERVER_DEBUG=true
+    volumes:
+        - /tmp/hyperledger/doctor/ca:/tmp/hyperledger/fabric-ca
+    networks:
+        - fabric-ca
+    ports:
+        - 7054:7054
+
+  rca-patient:
+    container_name: rca-patient
+    image: hyperledger/fabric-ca:latest
+    command: /bin/bash -c 'fabric-ca-server start -d -b rca-patient-admin:rca-patient-adminpw --port 7055'
+    environment:
+        - FABRIC_CA_SERVER_HOME=/tmp/hyperledger/fabric-ca/crypto
+        - FABRIC_CA_SERVER_TLS_ENABLED=true
+        - FABRIC_CA_SERVER_CSR_CN=rca-patient
+        - FABRIC_CA_SERVER_CSR_HOSTS=0.0.0.0
+        - FABRIC_CA_SERVER_DEBUG=true
+    volumes:
+        - /tmp/hyperledger/patient/ca:/tmp/hyperledger/fabric-ca
+    networks:
+        - fabric-ca
+    ports:
+        - 7055:7055
+
+  rca-insurer:
+    container_name: rca-insurer
+    image: hyperledger/fabric-ca:latest
+    command: /bin/bash -c 'fabric-ca-server start -d -b rca-insurer-admin:rca-insurer-adminpw --port 7056'
+    environment:
+        - FABRIC_CA_SERVER_HOME=/tmp/hyperledger/fabric-ca/crypto
+        - FABRIC_CA_SERVER_TLS_ENABLED=true
+        - FABRIC_CA_SERVER_CSR_CN=rca-insurer
+        - FABRIC_CA_SERVER_CSR_HOSTS=0.0.0.0
+        - FABRIC_CA_SERVER_DEBUG=true
+    volumes:
+        - /tmp/hyperledger/insurer/ca:/tmp/hyperledger/fabric-ca
+    networks:
+        - fabric-ca
+    ports:
+        - 7056:7056
+
+  rca-pharmacy:
+    container_name: rca-pharmacy
+    image: hyperledger/fabric-ca:latest
+    command: /bin/bash -c 'fabric-ca-server start -d -b rca-pharmacy-admin:rca-pharmacy-adminpw --port 7057'
+    environment:
+        - FABRIC_CA_SERVER_HOME=/tmp/hyperledger/fabric-ca/crypto
+        - FABRIC_CA_SERVER_TLS_ENABLED=true
+        - FABRIC_CA_SERVER_CSR_CN=rca-pharmacy
+        - FABRIC_CA_SERVER_CSR_HOSTS=0.0.0.0
+        - FABRIC_CA_SERVER_DEBUG=true
+    volumes:
+        - /tmp/hyperledger/pharmacy/ca:/tmp/hyperledger/fabric-ca
+    networks:
+        - fabric-ca
+    ports:
+        - 7057:7057
+
+  peer1-doctor:
+    container_name: peer1-doctor
+    image: hyperledger/fabric-peer:latest
+    environment:
+        - CORE_PEER_ID=peer1-doctor
+        - CORE_PEER_ADDRESS=peer1-doctor:7051
+        - CORE_PEER_LOCALMSPID=doctorMSP
+        - CORE_PEER_LISTENADDRESS=0.0.0.0:7051
+        - CORE_PEER_MSPCONFIGPATH=/tmp/hyperledger/doctor/peer1/msp
+        - CORE_VM_ENDPOINT=unix:///host/var/run/docker.sock
+        - CORE_VM_DOCKER_HOSTCONFIG_NETWORKMODE=guide_fabric-ca
+        - FABRIC_LOGGING_SPEC=info
+        - CORE_PEER_TLS_ENABLED=true
+        - CORE_PEER_TLS_CERT_FILE=/tmp/hyperledger/doctor/peer1/tls-msp/signcerts/cert.pem
+        - CORE_PEER_TLS_KEY_FILE=/tmp/hyperledger/doctor/peer1/tls-msp/keystore/key.pem
+        - CORE_PEER_TLS_ROOTCERT_FILE=/tmp/hyperledger/doctor/peer1/tls-msp/tlscacerts/tls-0-0-0-0-7052.pem
+        - CORE_PEER_GOSSIP_USELEADERELECTION=true
+        - CORE_PEER_GOSSIP_ORGLEADER=false
+        - CORE_PEER_GOSSIP_EXTERNALENDPOINT=peer1-doctor:7051
+        - CORE_PEER_GOSSIP_SKIPHANDSHAKE=true
+    working_dir: /opt/gopath/src/github.com/hyperledger/fabric/doctor/peer1
+    volumes:
+        - /var/run:/host/var/run
+        - /tmp/hyperledger/doctor/peer1:/tmp/hyperledger/doctor/peer1
+    ports:
+        - 7051:7051
+    networks:
+        - fabric-ca
+
+  peer2-doctor:
+    container_name: peer2-doctor
+    image: hyperledger/fabric-peer:latest
+    environment:
+        - CORE_PEER_ID=peer2-doctor
+        - CORE_PEER_ADDRESS=peer2-doctor:8051
+        - CORE_PEER_LOCALMSPID=doctorMSP
+        - CORE_PEER_LISTENADDRESS=0.0.0.0:8051
+        - CORE_PEER_MSPCONFIGPATH=/tmp/hyperledger/doctor/peer2/msp
+        - CORE_VM_ENDPOINT=unix:///host/var/run/docker.sock
+        - CORE_VM_DOCKER_HOSTCONFIG_NETWORKMODE=guide_fabric-ca
+        - FABRIC_LOGGING_SPEC=info
+        - CORE_PEER_TLS_ENABLED=true
+        - CORE_PEER_TLS_CERT_FILE=/tmp/hyperledger/doctor/peer2/tls-msp/signcerts/cert.pem
+        - CORE_PEER_TLS_KEY_FILE=/tmp/hyperledger/doctor/peer2/tls-msp/keystore/key.pem
+        - CORE_PEER_TLS_ROOTCERT_FILE=/tmp/hyperledger/doctor/peer2/tls-msp/tlscacerts/tls-0-0-0-0-7052.pem
+        - CORE_PEER_GOSSIP_USELEADERELECTION=true
+        - CORE_PEER_GOSSIP_ORGLEADER=false
+        - CORE_PEER_GOSSIP_EXTERNALENDPOINT=peer2-doctor:8051
+        - CORE_PEER_GOSSIP_SKIPHANDSHAKE=true
+        - CORE_PEER_GOSSIP_BOOTSTRAP=peer1-doctor:7051
+    working_dir: /opt/gopath/src/github.com/hyperledger/fabric/doctor/peer2
+    volumes:
+        - /var/run:/host/var/run
+        - /tmp/hyperledger/doctor/peer2:/tmp/hyperledger/doctor/peer2
+    ports:
+        - 8051:8051      
+    networks:
+        - fabric-ca
+
+  peer1-patient:
+    container_name: peer1-patient
+    image: hyperledger/fabric-peer:latest
+    environment:
+        - CORE_PEER_ID=peer1-patient
+        - CORE_PEER_ADDRESS=peer1-patient:9051
+        - CORE_PEER_LOCALMSPID=patientMSP
+        - CORE_PEER_LISTENADDRESS=0.0.0.0:9051
+        - CORE_PEER_MSPCONFIGPATH=/tmp/hyperledger/patient/peer1/msp
+        - CORE_VM_ENDPOINT=unix:///host/var/run/docker.sock
+        - CORE_VM_DOCKER_HOSTCONFIG_NETWORKMODE=guide_fabric-ca
+        - FABRIC_LOGGING_SPEC=info
+        - CORE_PEER_TLS_ENABLED=true
+        - CORE_PEER_TLS_CERT_FILE=/tmp/hyperledger/patient/peer1/tls-msp/signcerts/cert.pem
+        - CORE_PEER_TLS_KEY_FILE=/tmp/hyperledger/patient/peer1/tls-msp/keystore/key.pem
+        - CORE_PEER_TLS_ROOTCERT_FILE=/tmp/hyperledger/patient/peer1/tls-msp/tlscacerts/tls-0-0-0-0-7052.pem
+        - CORE_PEER_GOSSIP_USELEADERELECTION=true
+        - CORE_PEER_GOSSIP_ORGLEADER=false
+        - CORE_PEER_GOSSIP_EXTERNALENDPOINT=peer1-patient:9051
+        - CORE_PEER_GOSSIP_SKIPHANDSHAKE=true
+    working_dir: /opt/gopath/src/github.com/hyperledger/fabric/patient/peer1
+    volumes:
+        - /var/run:/host/var/run
+        - /tmp/hyperledger/patient/peer1:/tmp/hyperledger/patient/peer1
+    ports:
+        - 9051:9051
+    networks:
+        - fabric-ca
+
+  peer2-patient:
+    container_name: peer2-patient
+    image: hyperledger/fabric-peer:latest
+    environment:
+        - CORE_PEER_ID=peer2-patient
+        - CORE_PEER_ADDRESS=peer2-patient:10051
+        - CORE_PEER_LOCALMSPID=patientMSP
+        - CORE_PEER_LISTENADDRESS=0.0.0.0:10051
+        - CORE_PEER_MSPCONFIGPATH=/tmp/hyperledger/patient/peer2/msp
+        - CORE_VM_ENDPOINT=unix:///host/var/run/docker.sock
+        - CORE_VM_DOCKER_HOSTCONFIG_NETWORKMODE=guide_fabric-ca
+        - FABRIC_LOGGING_SPEC=info
+        - CORE_PEER_TLS_ENABLED=true
+        - CORE_PEER_TLS_CERT_FILE=/tmp/hyperledger/patient/peer2/tls-msp/signcerts/cert.pem
+        - CORE_PEER_TLS_KEY_FILE=/tmp/hyperledger/patient/peer2/tls-msp/keystore/key.pem
+        - CORE_PEER_TLS_ROOTCERT_FILE=/tmp/hyperledger/patient/peer2/tls-msp/tlscacerts/tls-0-0-0-0-7052.pem
+        - CORE_PEER_GOSSIP_USELEADERELECTION=true
+        - CORE_PEER_GOSSIP_ORGLEADER=false
+        - CORE_PEER_GOSSIP_EXTERNALENDPOINT=peer2-patient:10051
+        - CORE_PEER_GOSSIP_SKIPHANDSHAKE=true
+        - CORE_PEER_GOSSIP_BOOTSTRAP=peer1-patient:9051
+    working_dir: /opt/gopath/src/github.com/hyperledger/fabric/patient/peer2
+    volumes:
+        - /var/run:/host/var/run
+        - /tmp/hyperledger/patient/peer2:/tmp/hyperledger/patient/peer2
+    ports:
+        - 10051:10051
+    networks:
+        - fabric-ca
+
+  peer1-insurer:
+    container_name: peer1-insurer
+    image: hyperledger/fabric-peer:latest
+    environment:
+        - CORE_PEER_ID=peer1-insurer
+        - CORE_PEER_ADDRESS=peer1-insurer:11051
+        - CORE_PEER_LOCALMSPID=insurerMSP
+        - CORE_PEER_LISTENADDRESS=0.0.0.0:11051
+        - CORE_PEER_MSPCONFIGPATH=/tmp/hyperledger/insurer/peer1/msp
+        - CORE_VM_ENDPOINT=unix:///host/var/run/docker.sock
+        - CORE_VM_DOCKER_HOSTCONFIG_NETWORKMODE=guide_fabric-ca
+        - FABRIC_LOGGING_SPEC=info
+        - CORE_PEER_TLS_ENABLED=true
+        - CORE_PEER_TLS_CERT_FILE=/tmp/hyperledger/insurer/peer1/tls-msp/signcerts/cert.pem
+        - CORE_PEER_TLS_KEY_FILE=/tmp/hyperledger/insurer/peer1/tls-msp/keystore/key.pem
+        - CORE_PEER_TLS_ROOTCERT_FILE=/tmp/hyperledger/insurer/peer1/tls-msp/tlscacerts/tls-0-0-0-0-7052.pem
+        - CORE_PEER_GOSSIP_USELEADERELECTION=true
+        - CORE_PEER_GOSSIP_ORGLEADER=false
+        - CORE_PEER_GOSSIP_EXTERNALENDPOINT=peer1-insurer:11051
+        - CORE_PEER_GOSSIP_SKIPHANDSHAKE=true
+    working_dir: /opt/gopath/src/github.com/hyperledger/fabric/insurer/peer1
+    volumes:
+        - /var/run:/host/var/run
+        - /tmp/hyperledger/insurer/peer1:/tmp/hyperledger/insurer/peer1
+    ports:
+        - 11051:11051
+    networks:
+        - fabric-ca
+
+  peer2-insurer:
+    container_name: peer2-insurer
+    image: hyperledger/fabric-peer:latest
+    environment:
+        - CORE_PEER_ID=peer2-insurer
+        - CORE_PEER_ADDRESS=peer2-insurer:12051
+        - CORE_PEER_LOCALMSPID=insurerMSP
+        - CORE_PEER_LISTENADDRESS=0.0.0.0:12051
+        - CORE_PEER_MSPCONFIGPATH=/tmp/hyperledger/insurer/peer2/msp
+        - CORE_VM_ENDPOINT=unix:///host/var/run/docker.sock
+        - CORE_VM_DOCKER_HOSTCONFIG_NETWORKMODE=guide_fabric-ca
+        - FABRIC_LOGGING_SPEC=info
+        - CORE_PEER_TLS_ENABLED=true
+        - CORE_PEER_TLS_CERT_FILE=/tmp/hyperledger/insurer/peer2/tls-msp/signcerts/cert.pem
+        - CORE_PEER_TLS_KEY_FILE=/tmp/hyperledger/insurer/peer2/tls-msp/keystore/key.pem
+        - CORE_PEER_TLS_ROOTCERT_FILE=/tmp/hyperledger/insurer/peer2/tls-msp/tlscacerts/tls-0-0-0-0-7052.pem
+        - CORE_PEER_GOSSIP_USELEADERELECTION=true
+        - CORE_PEER_GOSSIP_ORGLEADER=false
+        - CORE_PEER_GOSSIP_EXTERNALENDPOINT=peer2-insurer:12051
+        - CORE_PEER_GOSSIP_SKIPHANDSHAKE=true
+        - CORE_PEER_GOSSIP_BOOTSTRAP=peer1-insurer:11051
+    working_dir: /opt/gopath/src/github.com/hyperledger/fabric/insurer/peer2
+    volumes:
+        - /var/run:/host/var/run
+        - /tmp/hyperledger/insurer/peer2:/tmp/hyperledger/insurer/peer2
+    ports:
+        - 12051:12051
+    networks:
+        - fabric-ca
+
+  peer1-pharmacy:
+    container_name: peer1-pharmacy
+    image: hyperledger/fabric-peer:latest
+    environment:
+        - CORE_PEER_ID=peer1-pharmacy
+        - CORE_PEER_ADDRESS=peer1-pharmacy:13051
+        - CORE_PEER_LOCALMSPID=pharmacyMSP
+        - CORE_PEER_LISTENADDRESS=0.0.0.0:13051
+        - CORE_PEER_MSPCONFIGPATH=/tmp/hyperledger/pharmacy/peer1/msp
+        - CORE_VM_ENDPOINT=unix:///host/var/run/docker.sock
+        - CORE_VM_DOCKER_HOSTCONFIG_NETWORKMODE=guide_fabric-ca
+        - FABRIC_LOGGING_SPEC=info
+        - CORE_PEER_TLS_ENABLED=true
+        - CORE_PEER_TLS_CERT_FILE=/tmp/hyperledger/pharmacy/peer1/tls-msp/signcerts/cert.pem
+        - CORE_PEER_TLS_KEY_FILE=/tmp/hyperledger/pharmacy/peer1/tls-msp/keystore/key.pem
+        - CORE_PEER_TLS_ROOTCERT_FILE=/tmp/hyperledger/pharmacy/peer1/tls-msp/tlscacerts/tls-0-0-0-0-7052.pem
+        - CORE_PEER_GOSSIP_USELEADERELECTION=true
+        - CORE_PEER_GOSSIP_ORGLEADER=false
+        - CORE_PEER_GOSSIP_EXTERNALENDPOINT=peer1-pharmacy:13051
+        - CORE_PEER_GOSSIP_SKIPHANDSHAKE=true
+    working_dir: /opt/gopath/src/github.com/hyperledger/fabric/pharmacy/peer1
+    volumes:
+        - /var/run:/host/var/run
+        - /tmp/hyperledger/pharmacy/peer1:/tmp/hyperledger/pharmacy/peer1
+    ports:
+        - 13051:13051
+    networks:
+        - fabric-ca
+
+  peer2-pharmacy:
+    container_name: peer2-pharmacy
+    image: hyperledger/fabric-peer:latest
+    environment:
+        - CORE_PEER_ID=peer2-pharmacy
+        - CORE_PEER_ADDRESS=peer2-pharmacy:14051
+        - CORE_PEER_LOCALMSPID=pharmacyMSP
+        - CORE_PEER_LISTENADDRESS=0.0.0.0:14051
+        - CORE_PEER_MSPCONFIGPATH=/tmp/hyperledger/pharmacy/peer2/msp
+        - CORE_VM_ENDPOINT=unix:///host/var/run/docker.sock
+        - CORE_VM_DOCKER_HOSTCONFIG_NETWORKMODE=guide_fabric-ca
+        - FABRIC_LOGGING_SPEC=info
+        - CORE_PEER_TLS_ENABLED=true
+        - CORE_PEER_TLS_CERT_FILE=/tmp/hyperledger/pharmacy/peer2/tls-msp/signcerts/cert.pem
+        - CORE_PEER_TLS_KEY_FILE=/tmp/hyperledger/pharmacy/peer2/tls-msp/keystore/key.pem
+        - CORE_PEER_TLS_ROOTCERT_FILE=/tmp/hyperledger/pharmacy/peer2/tls-msp/tlscacerts/tls-0-0-0-0-7052.pem
+        - CORE_PEER_GOSSIP_USELEADERELECTION=true
+        - CORE_PEER_GOSSIP_ORGLEADER=false
+        - CORE_PEER_GOSSIP_EXTERNALENDPOINT=peer2-pharmacy:14051
+        - CORE_PEER_GOSSIP_SKIPHANDSHAKE=true
+        - CORE_PEER_GOSSIP_BOOTSTRAP=peer1-pharmacy:13051
+    working_dir: /opt/gopath/src/github.com/hyperledger/fabric/pharmacy/peer2
+    volumes:
+        - /var/run:/host/var/run
+        - /tmp/hyperledger/pharmacy/peer2:/tmp/hyperledger/pharmacy/peer2
+    ports:
+        - 14051:14051
+    networks:
+        - fabric-ca
+
+
+  orderer1-ayn:
+    container_name: orderer1-ayn
+    image: hyperledger/fabric-orderer:latest
+    environment:
+        - ORDERER_HOME=/tmp/hyperledger/orderer
+        - ORDERER_HOST=orderer1-ayn
+        - ORDERER_GENERAL_LISTENADDRESS=0.0.0.0
+        - ORDERER_GENERAL_GENESISMETHOD=file
+        - ORDERER_GENERAL_GENESISFILE=/tmp/hyperledger/ayn/orderer/genesis.block
+        - ORDERER_GENERAL_LOCALMSPID=aynMSP
+        - ORDERER_GENERAL_LOCALMSPDIR=/tmp/hyperledger/ayn/orderer/msp
+        - ORDERER_GENERAL_TLS_ENABLED=true
+        - ORDERER_GENERAL_TLS_CERTIFICATE=/tmp/hyperledger/ayn/orderer/tls-msp/signcerts/cert.pem
+        - ORDERER_GENERAL_TLS_PRIVATEKEY=/tmp/hyperledger/ayn/orderer/tls-msp/keystore/key.pem
+        - ORDERER_GENERAL_TLS_ROOTCAS=[/tmp/hyperledger/ayn/orderer/tls-msp/tlscacerts/tls-0-0-0-0-7052.pem]
+        - ORDERER_GENERAL_LOGLEVEL=debug
+        - ORDERER_DEBUG_BROADCASTTRACEDIR=data/logs
+    volumes:
+        - /tmp/hyperledger/ayn/orderer:/tmp/hyperledger/ayn/orderer/
+    ports:
+        - 7050:7050
+    networks:
+        - fabric-ca
+
+
+  orderer2-ayn:
+    container_name: orderer2-ayn
+    image: hyperledger/fabric-orderer:latest
+    environment:
+        - ORDERER_HOME=/tmp/hyperledger/orderer
+        - ORDERER_HOST=orderer2-ayn
+        - ORDERER_GENERAL_LISTENADDRESS=0.0.0.0
+        - ORDERER_GENERAL_GENESISMETHOD=file
+        - ORDERER_GENERAL_GENESISFILE=/tmp/hyperledger/ayn/orderer/genesis.block
+        - ORDERER_GENERAL_LOCALMSPID=aynMSP
+        - ORDERER_GENERAL_LOCALMSPDIR=/tmp/hyperledger/ayn/orderer/msp
+        - ORDERER_GENERAL_TLS_ENABLED=true
+        - ORDERER_GENERAL_TLS_CERTIFICATE=/tmp/hyperledger/ayn/orderer/tls-msp/signcerts/cert.pem
+        - ORDERER_GENERAL_TLS_PRIVATEKEY=/tmp/hyperledger/ayn/orderer/tls-msp/keystore/key.pem
+        - ORDERER_GENERAL_TLS_ROOTCAS=[/tmp/hyperledger/ayn/orderer/tls-msp/tlscacerts/tls-0-0-0-0-7052.pem]
+        - ORDERER_GENERAL_LOGLEVEL=debug
+        - ORDERER_DEBUG_BROADCASTTRACEDIR=data/logs
+    volumes:
+        - /tmp/hyperledger/ayn/orderer:/tmp/hyperledger/ayn/orderer/
+    ports:
+        - 8050:8050
+    networks:
+        - fabric-ca
+
+
+  orderer3-ayn:
+    container_name: orderer3-ayn
+    image: hyperledger/fabric-orderer:latest
+    environment:
+        - ORDERER_HOME=/tmp/hyperledger/orderer
+        - ORDERER_HOST=orderer3-ayn
+        - ORDERER_GENERAL_LISTENADDRESS=0.0.0.0
+        - ORDERER_GENERAL_GENESISMETHOD=file
+        - ORDERER_GENERAL_GENESISFILE=/tmp/hyperledger/ayn/orderer/genesis.block
+        - ORDERER_GENERAL_LOCALMSPID=aynMSP
+        - ORDERER_GENERAL_LOCALMSPDIR=/tmp/hyperledger/ayn/orderer/msp
+        - ORDERER_GENERAL_TLS_ENABLED=true
+        - ORDERER_GENERAL_TLS_CERTIFICATE=/tmp/hyperledger/ayn/orderer/tls-msp/signcerts/cert.pem
+        - ORDERER_GENERAL_TLS_PRIVATEKEY=/tmp/hyperledger/ayn/orderer/tls-msp/keystore/key.pem
+        - ORDERER_GENERAL_TLS_ROOTCAS=[/tmp/hyperledger/ayn/orderer/tls-msp/tlscacerts/tls-0-0-0-0-7052.pem]
+        - ORDERER_GENERAL_LOGLEVEL=debug
+        - ORDERER_DEBUG_BROADCASTTRACEDIR=data/logs
+    volumes:
+        - /tmp/hyperledger/ayn/orderer:/tmp/hyperledger/ayn/orderer/
+    ports:
+        - 9050:9050
+    networks:
+        - fabric-ca
+
